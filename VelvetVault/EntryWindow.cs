@@ -1,0 +1,47 @@
+using System.Security.Cryptography;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+namespace VelvetVault;
+public sealed class EntryWindow {
+ public Window Window {get;}
+ public TextBox NameInput {get;} public TextBox UserInput {get;} public TextBox EmailInput {get;} public PasswordBox SecretInput {get;} public TextBox RevealInput {get;} public TextBox NotesInput {get;}
+ public Button SaveButton {get;} public Button CancelButton {get;} public Button GenerateButton {get;} public Button RevealButton {get;} public Button DetailsButton {get;}
+ bool revealed;
+ public EntryWindow(MainWindow owner,Entry? original,Func<Entry,bool> commit,bool importing=false,Func<Entry,Entry?>? prepareImport=null,Func<Window,bool>? importMany=null){
+  Guid recordId=original?.Id??Guid.NewGuid();string website=original?.Website??"",category=original?.Category??"Personal";
+  Window=VaultUI.Window(owner,"Vault",480,540);Window.MinWidth=450;Window.MinHeight=450;
+  var root=VaultUI.Grid(new GridLength(24),new GridLength(7),new GridLength(1,GridUnitType.Star),new GridLength(58));root.Margin=new Thickness(14,6,14,6);
+  var heading=new Grid{Margin=new Thickness(3,6,3,0)};var titles=new StackPanel();titles.Children.Add(VaultUI.Label(importing?"RECORD INPUT / QR PREVIEW":original==null?"RECORD INPUT / NEW":"RECORD INPUT / EDIT",8));heading.Children.Add(titles);heading.Children.Add(new TextBlock{Text="01 / LOCAL",FontSize=9,HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Top});root.Children.Add(heading);
+  var rail=new MotionRail{Height=4,VerticalAlignment=VerticalAlignment.Top};Grid.SetRow(rail,1);root.Children.Add(rail);
+  var form=new StackPanel{Margin=new Thickness(16,17,16,14)};
+  void Caption(string number,string text){var label=new Grid{Margin=new Thickness(0,0,0,6)};label.Children.Add(new TextBlock{Text=number+" / "+text,FontSize=9,FontFamily=new FontFamily("Consolas")});form.Children.Add(label);}
+  Border Box(Control input)=>new(){BorderBrush=Palette.Ink,BorderThickness=new Thickness(1.2),CornerRadius=new CornerRadius(7),Padding=new Thickness(10,7,10,7),Margin=new Thickness(0,0,0,10),Child=FieldCaret.Wrap(input)};
+  TextBox TextInput(string name,string value){var t=new TextBox{Text=value,BorderThickness=new Thickness(0),Padding=new Thickness(0),Background=Brushes.Transparent,FontSize=14};System.Windows.Automation.AutomationProperties.SetName(t,name);return t;}
+  Caption("01","ACCOUNT NAME");NameInput=TextInput("Account name",original?.Name??"");form.Children.Add(Box(NameInput));
+  Caption("02","USERNAME");UserInput=TextInput("Username",original?.Username??"");form.Children.Add(Box(UserInput));
+  Caption("03","EMAIL");EmailInput=TextInput("Email",original?.Email??"");form.Children.Add(Box(EmailInput));
+  Caption("04","PASSWORD");SecretInput=new PasswordBox{Password=original?.Password??"",BorderThickness=new Thickness(0),Padding=new Thickness(0),Background=Brushes.Transparent,FontSize=14};System.Windows.Automation.AutomationProperties.SetName(SecretInput,"Password");RevealInput=TextInput("Visible password",original?.Password??"");RevealInput.AcceptsReturn=true;RevealInput.TextWrapping=TextWrapping.Wrap;RevealInput.MaxHeight=80;RevealInput.Visibility=Visibility.Collapsed;
+  var secretGrid=new Grid();secretGrid.Children.Add(FieldCaret.Wrap(SecretInput));secretGrid.Children.Add(FieldCaret.Wrap(RevealInput));var secretFrame=new Border{BorderBrush=Palette.Ink,BorderThickness=new Thickness(1.2),CornerRadius=new CornerRadius(7),Padding=new Thickness(10,7,10,7),Margin=new Thickness(0,0,0,9),Child=secretGrid};form.Children.Add(secretFrame);
+  var tools=new WrapPanel{Margin=new Thickness(0,0,0,12)};RevealButton=new Button{Content="SHOW KEY",FontSize=10,Padding=new Thickness(11,7,11,7)};RevealButton.Click+=(_,_)=>{if(!revealed){RevealInput.Text=SecretInput.Password;SecretInput.Visibility=Visibility.Collapsed;RevealInput.Visibility=Visibility.Visible;}else{SecretInput.Password=RevealInput.Text;SecretInput.Visibility=Visibility.Visible;RevealInput.AcceptsReturn=true;RevealInput.TextWrapping=TextWrapping.Wrap;RevealInput.MaxHeight=80;RevealInput.Visibility=Visibility.Collapsed;}revealed=!revealed;RevealButton.Content=revealed?"HIDE KEY":"SHOW KEY";};tools.Children.Add(RevealButton);
+  GenerateButton=new Button{Content="⟳ GENERATE / 20",FontSize=10,Padding=new Thickness(11,7,11,7)};GenerateButton.Click+=(_,_)=>{const string chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*+-?";string p;do{p=new string(Enumerable.Range(0,20).Select(_=>chars[RandomNumberGenerator.GetInt32(chars.Length)]).ToArray());}while(!p.Any(char.IsUpper)||!p.Any(char.IsLower)||!p.Any(char.IsDigit)||!p.Any(c=>!char.IsLetterOrDigit(c)));SecretInput.Password=p;RevealInput.Text=p;};tools.Children.Add(GenerateButton);form.Children.Add(tools);
+  NotesInput=TextInput("Recovery details",original?.Notes??"");NotesInput.AcceptsReturn=true;NotesInput.TextWrapping=TextWrapping.Wrap;NotesInput.Height=80;NotesInput.VerticalScrollBarVisibility=ScrollBarVisibility.Hidden;var notesBox=Box(NotesInput);notesBox.Visibility=Visibility.Collapsed;
+  DetailsButton=new Button{Content="+ DETAILS / RECOVERY CODES",FontSize=9,HorizontalAlignment=HorizontalAlignment.Left,Padding=new Thickness(10,7,10,7),Margin=new Thickness(0,0,0,9)};DetailsButton.Click+=(_,_)=>{bool opening=notesBox.Visibility!=Visibility.Visible;notesBox.Visibility=opening?Visibility.Visible:Visibility.Collapsed;DetailsButton.Content=opening?"− DETAILS / RECOVERY CODES":"+ DETAILS / RECOVERY CODES";if(opening)notesBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,new Action(()=>notesBox.BringIntoView()));};form.Children.Add(DetailsButton);form.Children.Add(notesBox);
+  if(original==null){var qrButton=new Button{Content="+QR CODE",FontSize=10,FontWeight=FontWeights.Bold,Padding=new Thickness(11,7,11,7)};tools.Children.Add(qrButton);qrButton.Click+=(_,_)=>{
+   var picker=new Microsoft.Win32.OpenFileDialog{Title="Import account QR image",Filter="QR images|*.png;*.jpg;*.jpeg;*.bmp",Multiselect=false};if(picker.ShowDialog(Window)!=true)return;
+   Entry? imported;try{imported=QrImport.ReadImage(picker.FileName);}catch{VaultPrompt.Show(Window,"Could not import QR","Choose a readable account QR image exported by Vault.",false);return;}if(prepareImport!=null)imported=prepareImport(imported);if(imported==null)return;
+   recordId=imported.Id;website=imported.Website;category=imported.Category;NameInput.Text=imported.Name;UserInput.Text=imported.Username;EmailInput.Text=imported.Email;SecretInput.Password=imported.Password;RevealInput.Text=imported.Password;NotesInput.Text=imported.Notes;NameInput.Focus();
+  };}
+  if(original==null&&importMany!=null){var importButton=new Button{Content="+IMPORT",FontSize=10,FontWeight=FontWeights.Bold,Padding=new Thickness(11,7,11,7)};importButton.Click+=(_,_)=>{if(importMany(Window))Window.Close();};tools.Children.Add(importButton);}
+  var error=new TextBlock{FontSize=10,Foreground=Palette.Ink,TextWrapping=TextWrapping.Wrap};form.Children.Add(error);void ClearError(object sender,RoutedEventArgs e)=>error.Text="";NameInput.TextChanged+=ClearError;UserInput.TextChanged+=ClearError;EmailInput.TextChanged+=ClearError;SecretInput.PasswordChanged+=ClearError;RevealInput.TextChanged+=ClearError;NotesInput.TextChanged+=ClearError;
+  var frame=new RetroFrame{Child=new ScrollViewer{Content=form,VerticalScrollBarVisibility=ScrollBarVisibility.Hidden}};Grid.SetRow(frame,2);root.Children.Add(frame);
+  var footer=new Grid{Margin=new Thickness(0,10,0,0)};var actions=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};SaveButton=new Button{Content=importing?"IMPORT RECORD":"SAVE RECORD",FontSize=11,IsDefault=true,Background=Palette.Ink,Foreground=Palette.Paper};CancelButton=new Button{Content="CANCEL",FontSize=11,IsCancel=true};CancelButton.Click+=(_,_)=>Window.Close();actions.Children.Add(SaveButton);actions.Children.Add(CancelButton);footer.Children.Add(actions);
+  var codePanel=new StackPanel{HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Center};var code=new Barcode{Data=original?.Name??"NEW-CREDENTIAL",Width=95,Height=14,EdgeAligned=true};var codeLabel=VaultUI.Label("LOCAL / THIS .EXE",7);codeLabel.Width=95;codeLabel.Margin=new Thickness(0,0,0,4);codePanel.Children.Add(codeLabel);codePanel.Children.Add(code);footer.Children.Add(codePanel);NameInput.TextChanged+=(_,_)=>code.Data=string.IsNullOrWhiteSpace(NameInput.Text)?"NEW-CREDENTIAL":NameInput.Text;
+  SaveButton.Click+=(_,_)=>{string secret=revealed?RevealInput.Text:SecretInput.Password;if(string.IsNullOrWhiteSpace(NameInput.Text)||(secret.Length==0&&string.IsNullOrWhiteSpace(NotesInput.Text))){error.Text="Enter a name and a password or recovery details.";NameInput.Focus();return;}var record=new Entry{Id=recordId,Name=NameInput.Text.Trim(),Username=UserInput.Text.Trim(),Email=EmailInput.Text.Trim(),Password=secret,Website=website,Category=category,Notes=NotesInput.Text};if(commit(record))Window.Close();else error.Text="Could not save. Your input is still here.";};Grid.SetRow(footer,3);root.Children.Add(footer);VaultChrome.Apply(Window,root,importing?"IMPORT CREDENTIAL":original==null?"NEW CREDENTIAL":"EDIT CREDENTIAL");
+ }
+ public void Show()=>Window.ShowDialog();
+}
+
+
+
+
