@@ -4,7 +4,7 @@ A portable Windows password vault built with C# and WPF, with a monochrome day/n
 
 ## License
 
-Source-available for personal, noncommercial use under [LICENSE.md](LICENSE.md). Commercial use and resale of the original code require Kimikozi's written permission. This is not an open-source license. Third-party components retain their own licenses.
+Source-available for personal, noncommercial use only under [LICENSE.md](LICENSE.md). Commercial use, resale, redistribution, and sharing modified versions require Kimikozi's written permission, subject to the exceptions in that license. This is not an open-source license. Third-party components retain their own licenses.
 
 ## Features
 
