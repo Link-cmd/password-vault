@@ -2,7 +2,6 @@
 
 A portable Windows password vault built with C# and WPF, with a monochrome day/night interface. 
 
-Account data is saved inside the executable.
 
 ![Password Vault in dark mode with an empty vault](vault-preview.png)
 
