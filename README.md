@@ -2,6 +2,8 @@
 
 A portable Windows password vault built with C# and WPF, with a monochrome day/night interface. Account data is saved inside the executable. This repository contains source code only, with no saved accounts.
 
+![Password Vault in dark mode with an empty vault](vault-preview.png)
+
 ## License
 
 Source-available for personal, noncommercial use only under [LICENSE.md](LICENSE.md). Commercial use, resale, redistribution, and sharing modified versions require Kimikozi's written permission, subject to the exceptions in that license. This is not an open-source license. Third-party components retain their own licenses.
@@ -54,3 +56,4 @@ The full check runner expects a published executable in `App` and creates tempor
 ## Third-party components
 
 Uses QRCoder, ZXing.Net and Konscious.Security.Cryptography.Argon2 under their respective licenses. The bundled Saira Stencil font is distributed under the SIL Open Font License; see `VelvetVault/Fonts/OFL.txt`.
+
