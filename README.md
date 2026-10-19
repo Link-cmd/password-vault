@@ -12,6 +12,7 @@ Source-available for personal, noncommercial use only under [LICENSE.md](LICENSE
 
 ## Features
 
+- Account data is saved inside the executable.
 - Separate username, email, password and recovery-detail fields.
 - Password generation, search, clipboard copying and automatic clipboard clearing.
 - Account QR codes with PNG export and QR image import.
