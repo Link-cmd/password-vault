@@ -41,7 +41,7 @@ Text exports, account QR images and optional master-password text files contain 
 
 ## Optional sounds
 
-Third-party game sound clips are not distributed here. To supply your own audio, place files you have permission to use at `VelvetVault/Sounds/open.mp3` and `VelvetVault/Sounds/close.mp3` before building. Triple-click **LOCAL** to toggle sounds for the session; they start off.
+Third-party sound clips are not distributed here. To supply your own audio, place files you have permission to use at `VelvetVault/Sounds/open.mp3` and `VelvetVault/Sounds/close.mp3` before building. Triple-click **LOCAL** to toggle sounds for the session; they start off.
 
 ## Checks
 
